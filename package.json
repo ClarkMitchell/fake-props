@@ -1,0 +1,36 @@
+{
+  "name": "fake-props",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "scripts": {
+    "build": "node build.js",
+    "test": "jest --verbose"
+  },
+  "keywords": [
+    "react",
+    "proptypes",
+    "fake",
+    "test",
+    "fixture"
+  ],
+  "author": "Clark Mitchell",
+  "license": "MIT",
+  "dependencies": {
+    "faker": "^5.5.3",
+    "parse-prop-types": "^0.3.0"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.14.8",
+    "@babel/preset-react": "^7.14.5",
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^12.0.0",
+    "esbuild": "^0.12.16",
+    "jest": "^27.0.6",
+    "jsdom": "^16.6.0",
+    "prop-types": "^15.7.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  }
+}
