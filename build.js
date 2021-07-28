@@ -1,19 +1,12 @@
-const { build } = require("esbuild");
-const { dependencies, peerDependencies } = require("./package.json");
+import { build } from "esbuild";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const { dependencies } = require("./package.json");
 
-const shared = {
+build({
   entryPoints: ["src/index.js"],
   bundle: true,
   external: Object.keys(dependencies),
-};
-
-build({
-  ...shared,
-  outfile: "dist/index.js",
-});
-
-build({
-  ...shared,
-  outfile: "dist/index.esm.js",
-  format: "esm",
+  outfile: "index.js",
+  format: "cjs",
 });

@@ -34,7 +34,7 @@ const defaultNamespaces = Object.freeze([
  *
  * @param {Object} component - The React component to generate props for.
  * @param {array} namespaces - An array of Faker.js namespaces to search for matching methods.
- * @param {string|number} seed - A string or number value to generate consistent values.
+ * @param {number} seed - A string or number value to generate consistent values.
  * @returns - A Props Object.
  */
 export default function generateProps(component, namespaces, seed) {
@@ -42,22 +42,28 @@ export default function generateProps(component, namespaces, seed) {
     faker.seed(seed);
   }
 
-  const propTypes = parsePropTypes(component);
+  return generate(parsePropTypes(component), namespaces);
+}
 
+function generate(propTypes, namespaces) {
   const props = {};
-  for (const propName in propTypes) {
+  for (const [propName, propType] of Object.entries(propTypes)) {
     const {
       type: { name: type },
-    } = propTypes[propName];
+    } = propType;
 
-    const matches = (namespaces || defaultNamespaces).filter(
-      (namespace) => !!faker[namespace][propName]
-    );
+    if (type === "shape") {
+      props[propName] = generate(propType.type.value, namespaces);
+    } else {
+      const matches = (namespaces || defaultNamespaces).filter(
+        (namespace) => !!faker[namespace][propName]
+      );
 
-    props[propName] =
-      matches.length === 1
-        ? faker[matches[0]][propName]()
-        : faker.datatype[type]();
+      props[propName] =
+        matches.length === 1
+          ? faker[matches[0]][propName]()
+          : faker.datatype[type]();
+    }
   }
 
   return props;
