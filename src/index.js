@@ -48,23 +48,32 @@ export default function generateProps(component, namespaces, seed) {
 function generate(propTypes, namespaces) {
   const props = {};
   for (const [propName, propType] of Object.entries(propTypes)) {
-    const {
-      type: { name: type },
-    } = propType;
-
-    if (type === "shape") {
-      props[propName] = generate(propType.type.value, namespaces);
-    } else {
-      const matches = (namespaces || defaultNamespaces).filter(
-        (namespace) => !!faker[namespace][propName]
+    if (propType?.type?.name === "arrayOf") {
+      props[propName] = Array.from({ length: 3 }, () =>
+        generate(
+          propType.type.value[Object.keys(propType.type.value)[0]],
+          namespaces
+        )
       );
-
-      props[propName] =
-        matches.length === 1
-          ? faker[matches[0]][propName]()
-          : faker.datatype[type]();
+      continue;
     }
+
+    if (propType?.type?.name === "shape") {
+      props[propName] = generate(propType.type.value, namespaces);
+      continue;
+    }
+
+    const matches = (namespaces || defaultNamespaces).filter(
+      (namespace) => !!faker[namespace][propName]
+    );
+
+    props[propName] =
+      matches.length === 1
+        ? faker[matches[0]][propName]()
+        : faker.datatype[propType.type.name]();
   }
 
   return props;
 }
+
+//return after array
