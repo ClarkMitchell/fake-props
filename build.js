@@ -9,4 +9,5 @@ build({
   external: Object.keys(dependencies),
   outfile: "index.js",
   format: "cjs",
+  platform: "node",
 });

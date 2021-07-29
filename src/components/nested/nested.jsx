@@ -1,6 +1,5 @@
 import React from "react";
 import PropTypes from "prop-types";
-import "parse-prop-types";
 
 export default function Greeting({ firstName, address }) {
   return (

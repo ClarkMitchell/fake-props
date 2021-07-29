@@ -1,5 +1,6 @@
 import faker from "faker";
-import parsePropTypes from "parse-prop-types";
+import fs from "fs";
+import * as reactDocs from "react-docgen";
 
 const defaultNamespaces = Object.freeze([
   "address",
@@ -32,48 +33,61 @@ const defaultNamespaces = Object.freeze([
  * Instead of the default namespaces, only these will be checked for matching methods.
  * Additionally, a seed value can be passed in order to generate consistent values.
  *
- * @param {Object} component - The React component to generate props for.
- * @param {array} namespaces - An array of Faker.js namespaces to search for matching methods.
- * @param {number} seed - A string or number value to generate consistent values.
+ * @param {Object} path - Absolute path to component to generate props for.
+ * @param {Object} options - An optional options object.
+ * @param {boolean} options.optional - Whether to generate optional props.
+ * @param {array} options.namespaces - An array of Faker.js namespaces to search for matching methods.
+ * @param {number} options.seed - A string or number value to generate consistent values.
  * @returns - A Props Object.
  */
-export default function generateProps(component, namespaces, seed) {
-  if (seed) {
-    faker.seed(seed);
+export default function generateProps(
+  path,
+  options = { optional: true, namespaces: null, seed: null }
+) {
+  if (options.seed) {
+    faker.seed(options.seed);
   }
 
-  return generate(parsePropTypes(component), namespaces);
-}
+  const componentInfoArray = reactDocs.parse(
+    fs.readFileSync(path),
+    reactDocs.resolver.findAllComponentDefinitions,
+    null,
+    { filename: path }
+  );
 
-function generate(propTypes, namespaces) {
-  const props = {};
-  for (const [propName, propType] of Object.entries(propTypes)) {
-    if (propType?.type?.name === "arrayOf") {
-      props[propName] = Array.from({ length: 3 }, () =>
-        generate(
-          propType.type.value[Object.keys(propType.type.value)[0]],
-          namespaces
-        )
+  return componentInfoArray.length === 1
+    ? generate(componentInfoArray[0].props)
+    : componentInfoArray.map((component) => generate(component.props));
+
+  function generate(props) {
+    const fakeProps = {};
+    for (const [propName, propType] of Object.entries(props)) {
+      if (!propType.required && !options.optional) {
+        continue;
+      }
+
+      if (propType?.type?.name === "arrayOf") {
+        fakeProps[propName] = Array.from({ length: 3 }, () =>
+          generate(propType.type.value.value)
+        );
+        continue;
+      }
+
+      if (propType?.type?.name === "shape") {
+        fakeProps[propName] = generate(propType.type.value);
+        continue;
+      }
+
+      const matches = (options.namespaces || defaultNamespaces).filter(
+        (namespace) => !!faker[namespace][propName]
       );
-      continue;
+
+      fakeProps[propName] =
+        matches.length === 1
+          ? faker[matches[0]][propName]()
+          : faker.datatype[propType.type.name]();
     }
 
-    if (propType?.type?.name === "shape") {
-      props[propName] = generate(propType.type.value, namespaces);
-      continue;
-    }
-
-    const matches = (namespaces || defaultNamespaces).filter(
-      (namespace) => !!faker[namespace][propName]
-    );
-
-    props[propName] =
-      matches.length === 1
-        ? faker[matches[0]][propName]()
-        : faker.datatype[propType.type.name]();
+    return fakeProps;
   }
-
-  return props;
 }
-
-//return after array
