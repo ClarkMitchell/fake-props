@@ -61,33 +61,67 @@ export default function generateProps(
 
   function generate(props) {
     const fakeProps = {};
+
     for (const [propName, propType] of Object.entries(props)) {
       if (!propType.required && !options.optional) {
         continue;
       }
 
-      if (propType?.type?.name === "arrayOf") {
+      if (propType?.name === "arrayOf") {
         fakeProps[propName] = Array.from({ length: 3 }, () =>
-          generate(propType.type.value.value)
+          generate(propType.value)
         );
         continue;
       }
 
-      if (propType?.type?.name === "shape") {
-        fakeProps[propName] = generate(propType.type.value);
+      if (props?.name === "arrayOf") {
+        return Array.from({ length: 3 }, () => generate(props.value));
+      }
+
+      if (propType?.type?.name === "arrayOf") {
+        fakeProps[propName] = Array.from({ length: 3 }, () =>
+          generate(propType.type.value)
+        );
         continue;
+      }
+
+      if (props?.name === "shape") {
+        return generate(props.value);
+      }
+
+      if (propType?.name === "shape") {
+        fakeProps[propName] = generate(propType.value);
+        continue;
+      }
+
+      if (propType?.type?.name === "shape" || propType?.name === "shape") {
+        fakeProps[propName] = generate(
+          propType?.type?.value || propType?.value
+        );
+        continue;
+      }
+
+      let fallbackType = propType?.type?.name || propType.name;
+      if (fallbackType === "bool") {
+        fallbackType = "boolean";
       }
 
       const matches = (options.namespaces || defaultNamespaces).filter(
         (namespace) => !!faker[namespace][propName]
       );
 
-      fakeProps[propName] =
-        matches.length === 1
-          ? faker[matches[0]][propName]()
-          : faker.datatype[propType.type.name]();
+      try {
+        fakeProps[propName] =
+          matches.length === 1
+            ? faker.default[matches[0]][propName]()
+            : faker.default.datatype[fallbackType]();
+      } catch {
+        console.error(
+          "Could not generate data for the following props: ",
+          props
+        );
+      }
     }
-
     return fakeProps;
   }
 }

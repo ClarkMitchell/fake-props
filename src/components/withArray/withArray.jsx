@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 
 export default function WithArray({ firstName, friends }) {
+  console.log({ friends });
   return (
     <article>
       <h1>{firstName}</h1>
