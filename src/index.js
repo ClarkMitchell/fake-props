@@ -67,6 +67,28 @@ export default function generateProps(
         continue;
       }
 
+      if (props?.name === "arrayOf") {
+        return Array.from({ length: 3 }, () => generate(props.value));
+      }
+
+      if (props?.name === "shape") {
+        return generate(props.value);
+      }
+
+      if (propType?.type?.name === "arrayOf") {
+        const next =
+          propType.type.value?.name === "shape"
+            ? propType.type.value.value
+            : propType.type.value;
+        fakeProps[propName] = Array.from({ length: 3 }, () => generate(next));
+        continue;
+      }
+
+      if (propType?.type?.name === "shape") {
+        fakeProps[propName] = generate(propType.type.value);
+        continue;
+      }
+
       if (propType?.name === "arrayOf") {
         fakeProps[propName] = Array.from({ length: 3 }, () =>
           generate(propType.value)
@@ -74,30 +96,8 @@ export default function generateProps(
         continue;
       }
 
-      if (props?.name === "arrayOf") {
-        return Array.from({ length: 3 }, () => generate(props.value));
-      }
-
-      if (propType?.type?.name === "arrayOf") {
-        fakeProps[propName] = Array.from({ length: 3 }, () =>
-          generate(propType.type.value)
-        );
-        continue;
-      }
-
-      if (props?.name === "shape") {
-        return generate(props.value);
-      }
-
       if (propType?.name === "shape") {
         fakeProps[propName] = generate(propType.value);
-        continue;
-      }
-
-      if (propType?.type?.name === "shape" || propType?.name === "shape") {
-        fakeProps[propName] = generate(
-          propType?.type?.value || propType?.value
-        );
         continue;
       }
 
@@ -113,8 +113,8 @@ export default function generateProps(
       try {
         fakeProps[propName] =
           matches.length === 1
-            ? faker.default[matches[0]][propName]()
-            : faker.default.datatype[fallbackType]();
+            ? faker[matches[0]][propName]()
+            : faker.datatype[fallbackType]();
       } catch {
         console.error(
           "Could not generate data for the following props: ",
