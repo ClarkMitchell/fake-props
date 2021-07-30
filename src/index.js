@@ -57,7 +57,9 @@ export default function generateProps(
 
   return componentInfoArray.length === 1
     ? generate(componentInfoArray[0].props)
-    : componentInfoArray.map((component) => generate(component.props));
+    : componentInfoArray.map((component) =>
+        component?.props ? generate(component.props) : null
+      );
 
   function generate(props) {
     const fakeProps = {};
